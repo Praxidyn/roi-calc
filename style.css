@@ -1,0 +1,137 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    @apply bg-zinc-900;
+  }
+}
+
+@theme {
+  /* PUMPKIN */
+  --color-pumpkin-50: #fef6ee;
+  --color-pumpkin-100: #feead6;
+  --color-pumpkin-200: #fbd1ad;
+  --color-pumpkin-300: #f9b078;
+  --color-pumpkin-400: #f58642;
+  --color-pumpkin-500: #f26924;
+  --color-pumpkin-600: #e34a13;
+  --color-pumpkin-700: #bc3612;
+  --color-pumpkin-800: #962c16;
+  --color-pumpkin-900: #792815;
+  --color-pumpkin-950: #411109;
+
+  /* NORTH */
+  --color-north-50: #f0f9ff;
+  --color-north-100: #e0f3fe;
+  --color-north-200: #b9e8fe;
+  --color-north-300: #7cd6fd;
+  --color-north-400: #36c2fa;
+  --color-north-500: #0cabeb;
+  --color-north-600: #0094d9;
+  --color-north-700: #016da3;
+  --color-north-800: #065c86;
+  --color-north-900: #0b4c6f;
+  --color-north-950: #07304a;
+  /* BAHIA */
+  --color-bahia-50: #f8fce9;
+  --color-bahia-100: #eff7d0;
+  --color-bahia-200: #dfefa7;
+  --color-bahia-300: #c8e373;
+  --color-bahia-400: #a9cf38;
+  --color-bahia-500: #92b82a;
+  --color-bahia-600: #71931d;
+  --color-bahia-700: #56701b;
+  --color-bahia-800: #46591b;
+  --color-bahia-900: #3b4c1b;
+  --color-bahia-950: #1e2a09;
+  /* SHARK */
+  --color-shark-50: #f8f7f8;
+  --color-shark-100: #f0eeee;
+  --color-shark-200: #ded9da;
+  --color-shark-300: #c1b8bb;
+  --color-shark-400: #9f9196;
+  --color-shark-500: #847379;
+  --color-shark-600: #6c5d62;
+  --color-shark-700: #584c50;
+  --color-shark-800: #4b4144;
+  --color-shark-900: #41393b;
+  --color-shark-950: #231f20;
+
+  /* SPACING */
+  --spacing-18: 4.5rem;
+  --spacing-84: 21rem;
+  --spacing-88: 22rem;
+  --spacing-92: 23rem;
+  --spacing-96: 24rem;
+  --spacing-100: 25rem;
+  --spacing-104: 26rem;
+  --spacing-108: 27rem;
+  --spacing-112: 28rem;
+  --spacing-116: 29rem;
+  --spacing-120: 30rem;
+  --spacing-124: 31rem;
+  --spacing-128: 32rem;
+  --spacing-132: 33rem;
+  --spacing-136: 34rem;
+  --spacing-140: 35rem;
+  --spacing-144: 36rem;
+  --spacing-148: 37rem;
+  --spacing-152: 38rem;
+  --spacing-156: 39rem;
+  --spacing-160: 40rem;
+  --spacing-180: 45rem;
+  --spacing-200: 50rem;
+  --spacing-220: 55rem;
+  --spacing-240: 60rem;
+  --spacing-260: 65rem;
+  --spacing-280: 70rem;
+  --spacing-300: 75rem;
+  /* FONT SIZE */
+  --text-tiny: 0.625rem;
+  /* ANIMATIONS */
+  --animate-spin-slow: spin 2s linear infinite;
+}
+
+input {
+  @apply bg-white w-full px-2 py-3 border border-gray-300 rounded-lg;
+}
+h2 {
+  @apply my-4 mx-2 text-lg;
+}
+label {
+  @apply font-medium text-xs;
+}
+table {
+  @apply w-full border-collapse text-sm;
+}
+th,
+td {
+  @apply px-2 py-3 border-b border-gray-300 text-center;
+}
+thead th {
+  @apply bg-north-500 text-white sticky top-0;
+}
+tbody tr:nth-child(odd) {
+  @apply bg-white;
+}
+tbody tr:nth-child(even) {
+  @apply bg-gray-100;
+}
+.card {
+  @apply bg-gray-50 rounded-lg p-4 my-4 shadow;
+}
+.grid-box {
+  @apply flex flex-col px-2;
+}
+.grid-label {
+  @apply justify-center items-center font-medium text-gray-800;
+}
+.badge {
+  @apply inline-block mx-1 p-2 rounded-full bg-north-100 text-north-700 font-bold text-tiny;
+}
+.title {
+  @apply text-2xl font-bold mb-2;
+}
+.titlenote {
+  /* @apply text-white; */
+}
