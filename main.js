@@ -16,37 +16,30 @@ function readInputs() {
   return {
     sprayHours: gi("sprayHours"),
     loadBase: gi("loadBase"),
-    loadA: gi("loadA"),
-    loadB: gi("loadB"),
+    loadMM: gi("loadMM"),
     speed: gi("speedMph"),
-    fe: gi("fieldEff") / 100,
     boom1: gi("boom1"),
     tank1: gi("tank1"),
-    price1: gi("price1"),
     dep1: gi("dep1"),
     boom2: gi("boom2"),
     tank2: gi("tank2"),
-    price2: gi("price2"),
     dep2: gi("dep2"),
-    boom3: gi("boom3"),
-    tank3: gi("tank3"),
-    price3: gi("price3"),
-    dep3: gi("dep3"),
     gpa: gi("gpa"),
+    fe: gi("fieldEff"),
     annualAcres: gi("annualAcres"),
     yearsLife: gi("yearsLife"),
-    mixmatePrice: gi("mixmatePrice"),
+    revPerAcre: gi("revPerAcre"),
   };
 }
 
 function efc(boom, mph, fe) {
-  return (boom * mph * fe) / 8.25;
+  return (boom * mph * (fe/100.0)) / 8.25;
 } // ac/hr
 function acresPerLoad(tank, gpa) {
   return tank / gpa;
 }
 function cycleHours(acresPerLoad, efc, loadMin) {
-  return acresPerLoad / efc + loadMin / 60;
+  return (acresPerLoad / efc) + (loadMin / 60);
 }
 function loadsPerDay(sprayHours, cycleH) {
   return sprayHours / cycleH;
@@ -67,14 +60,14 @@ function calcForConfig(cfg, X) {
   const {
     sprayHours,
     loadBase,
-    loadA,
-    loadB,
+    loadMM,
     speed,
     fe,
     gpa,
     annualAcres,
     yearsLife,
     mixmatePrice,
+    revPerAcre,
   } = X;
   const { boom, tank, price, dep } = cfg;
   const lifeBase = annualAcres * yearsLife;
@@ -89,65 +82,67 @@ function calcForConfig(cfg, X) {
     const effHr = effAcPerHr(acDay, sprayHours);
     return { loadMin, cyc, loads, acDay, effHr };
   }
-
+  // Calculate base data
   const base = block(loadBase);
-  const A = block(loadA);
-  const B = block(loadB);
+  const MM = block(loadMM);
+  
+  // Extra Acres covered day, year, lifetime
+  const extraAcresDay = MM.acDay - base.acDay;
+  const extraAcresLife = lifetimeExtra(lifeBase, extraAcresDay, base.acDay);
+  const extraAcresYear = extraAcresLife / yearsLife;
 
-  const extraA = A.acDay - base.acDay;
-  const extraB = B.acDay - base.acDay;
+  // Total acres for Mixmate day, year, lifetime
+  const totalMixmateAcresDay = MM.acDay;
+  const totalMixmateAcresLife = lifetimeExtra(lifeBase, extraAcresDay, base.acDay) + lifeBase;
+  const totalMixmateAcresYear = totalMixmateAcresLife / yearsLife;
 
-  // Lifetime extra acres for improved scenarios
-  const lifeExtraA = lifetimeExtra(lifeBase, extraA, base.acDay) + lifeBase;
-  const lifeExtraB = lifetimeExtra(lifeBase, extraB, base.acDay) + lifeBase;
+  // Saved Hours in days, years, and lifetime
+  const savedHoursDay = (base.acDay / base.effHr) - (base.acDay / MM.effHr);
+  const savedHoursYear = (annualAcres / base.effHr) - (annualAcres / MM.effHr);
+  const savedHoursLife = (lifeBase / base.effHr) - (lifeBase / MM.effHr);
 
-  // Machine Extended Acres
-  const machineExtA = lifetimeExtra(lifeBase, extraA, base.acDay);
-  const machineExtB = lifetimeExtra(lifeBase, extraB, base.acDay);
+  // Depreciation Saved in days, years and lifetime
+  const saveDepDolDay = (savedHoursDay * cfg.dep);
+  const saveDepDolYear = (savedHoursYear * cfg.dep);
+  const saveDepDolLife = (savedHoursLife * cfg.dep);
 
-  // Lifetime‑adjusted sprayer cost $/acre per scenario
-  const capPerAcre_base = (price + (lifeBase / base.effHr) * dep) / lifeBase;
-  const capPerAcre_A = (price + (lifeBase / base.effHr) * dep) / lifeExtraA;
-  const capPerAcre_B = (price + (lifeBase / base.effHr) * dep) / lifeExtraB;
+  // Revenue Gained in days, years, and lifetime
+  const revenueGainedDay = (extraAcresDay * revPerAcre);
+  const revenueGainedYear = (extraAcresYear * revPerAcre);
+  const revenueGainedLife = (extraAcresLife * revPerAcre);
 
-  // Value/day uses sprayer cost $/acre
-  const valDay_A = extraA * capPerAcre_A;
-  const valDay_B = extraB * capPerAcre_B;
-
-  // Days to ROI and Operational BE acres
-  const opBeAcresA = lifeBase - machineExtA;
-  const opBeAcresB = lifeBase - machineExtB;
-
-  // Total break‑even acres (scenario‑specific now)
-  const daysA = valDay_A > 0 ? mixmatePrice / (valDay_A + base.acDay) : NaN;
-  const daysB = valDay_B > 0 ? mixmatePrice / (valDay_B + base.acDay) : NaN;
-  const beAcresTotal_A = isFinite(daysA) ? daysA * A.acDay : NaN;
-  const beAcresTotal_B = isFinite(daysB) ? daysB * B.acDay : NaN;
+  // Mixmate ROI
+  const mixmateDepDaysRoi = mixmatePrice / saveDepDolDay;
+  const mixmateDepAcresRoi = mixmateDepDaysRoi * base.acDay;
+  const mixmateRevDaysRoi = mixmatePrice / revenueGainedDay;
+  const mixmateRevAcresRoi = mixmateRevDaysRoi * MM.acDay;
 
   return {
     efc: efcVal,
     apl,
     base,
-    A,
-    B,
-    extraA,
-    extraB,
+    MM,
+    annualAcres,
     lifeBase,
-    lifeExtraA,
-    lifeExtraB,
-    machineExtA,
-    machineExtB,
-    capPerAcre_base,
-    capPerAcre_A,
-    capPerAcre_B,
-    valDay_A,
-    valDay_B,
-    daysA,
-    daysB,
-    opBeAcresA,
-    opBeAcresB,
-    beAcresTotal_A,
-    beAcresTotal_B,
+    extraAcresDay,
+    extraAcresYear,
+    extraAcresLife,
+    totalMixmateAcresDay,
+    totalMixmateAcresYear,
+    totalMixmateAcresLife,
+    savedHoursDay,
+    savedHoursYear,
+    savedHoursLife,
+    saveDepDolDay,
+    saveDepDolYear,
+    saveDepDolLife,
+    revenueGainedDay,
+    revenueGainedYear,
+    revenueGainedLife,
+    mixmateDepDaysRoi,
+    mixmateDepAcresRoi,
+    mixmateRevAcresRoi,
+    mixmateRevDaysRoi,
   };
 }
 
@@ -168,157 +163,91 @@ function renderTables() {
       price: X.price2,
       dep: X.dep2,
     },
-    {
-      label: "Sprayer 3",
-      boom: X.boom3,
-      tank: X.tank3,
-      price: X.price3,
-      dep: X.dep3,
-    },
   ];
   const results = configs.map((c) => ({ cfg: c, res: calcForConfig(c, X) }));
 
-  // Side‑by‑Side table
-  let sbs = `<div style="overflow:auto"><table><thead><tr>
-    <th>Sprayer</th><th>Mix Time</th><th>Acres/Day</th><th>Extra vs current</th>
-    <th>Lifetime Acres</th>
-    <th>Sprayer Cost $/acre</th>
-    <th>Value/Day ($)</th>
+  // Decreased Mix Time
+  let dmt = `<div style="overflow:auto"><table><thead><tr>
+    <th>Sprayer</th><th>Mix Time</th><th>Acres/Day</th>
+    <th>Hours Saved/Day</th><th>$ Saved/Day</th>
+    <th>Hours Saved/Year</th><th>$ Saved/Year</th>
+    <th>Hours Saved/Lifetime</th><th>$ Saved/Lifetime</th>
   </tr></thead><tbody>`;
   results.forEach(({ cfg, res }) => {
     const rows = [
       {
-        label: "20 min",
+        title: `with Mixmate`,
+        time: `${X.loadMM} min`,
         acDay: res.base.acDay,
-        extra: "–",
-        lifeExtra: "–",
-        capBase: res.capPerAcre_base,
-        capScen: res.capPerAcre_base,
-        val: "–",
-      },
-      {
-        label: `${X.loadA} min`,
-        acDay: res.A.acDay,
-        extra: res.extraA,
-        lifeExtra: res.lifeExtraA,
-        capBase: res.capPerAcre_base,
-        capScen: res.capPerAcre_A,
-        val: res.valDay_A,
-      },
-      {
-        label: `${X.loadB} min`,
-        acDay: res.B.acDay,
-        extra: res.extraB,
-        lifeExtra: res.lifeExtraB,
-        capBase: res.capPerAcre_base,
-        capScen: res.capPerAcre_B,
-        val: res.valDay_B,
+        savedHoursDay: res.savedHoursDay,
+        savedDollarsDay: res.saveDepDolDay,
+        savedHoursYear: res.savedHoursYear,
+        savedDollarsYear: res.saveDepDolYear,
+        savedHoursLife: res.savedHoursLife,
+        savedDollarsLife: res.saveDepDolLife,
       },
     ];
     rows.forEach((r) => {
-      sbs += `<tr>
-        <td>${cfg.label} <span class="badge">boom ${cfg.boom}′ / tank ${
-        cfg.tank
-      } / price ${dollars(cfg.price)}</span></td>
-        <td>${r.label}</td>
+      dmt += `<tr>
+        <td>${cfg.label} <span class="badge">${r.title}</span></td>
+        <td>${r.time}</td>
         <td>${fmt(r.acDay, 0)}</td>
-        <td>${typeof r.extra === "string" ? "–" : fmt(r.extra, 0)}</td>
-        <td>${
-          typeof r.lifeExtra === "string"
-            ? fmt(res.lifeBase, 0)
-            : fmt(r.lifeExtra, 0)
-        }</td>
-        <td>${dollars(r.capScen, 2)}</td>
-        <td>${typeof r.val === "string" ? "–" : dollars(r.val, 0)}</td>
+        <td>${typeof r.savedHoursDay === "string" ? "–" : fmt(r.savedHoursDay, 2)}</td>
+        <td>${typeof r.savedDollarsDay === "string" ? "–" : dollars(r.savedDollarsDay, 2)}</td>
+        <td>${typeof r.savedHoursYear === "string" ? "–" : fmt(r.savedHoursYear, 2)}</td>
+        <td>${typeof r.savedDollarsYear === "string" ? "–" : dollars(r.savedDollarsYear, 2)}</td>
+        <td>${typeof r.savedHoursLife === "string" ? "–" : fmt(r.savedHoursLife, 2)}</td>
+        <td>${typeof r.savedDollarsLife === "string" ? "–" : dollars(r.savedDollarsLife, 2)}</td>
       </tr>`;
     });
-    sbs += `<tr><td colspan="9" style="border-bottom:2px solid #d1d5db"></td></tr>`;
+    dmt += `<tr><td colspan="9" style="border-bottom:2px solid #d1d5db"></td></tr>`;
   });
-  sbs += "</tbody></table></div>";
-  document.getElementById("sbsTable").innerHTML = sbs;
+  dmt += "</tbody></table></div>";
+  document.getElementById("dmtTable").innerHTML = dmt;
 
-  // ROI table
-  let roi = `<div style="overflow:auto"><table><thead><tr>
-    <th>Sprayer</th><th>Mix Time</th><th>Acres/Day</th><th>Sprayer Break Even Acres</th><th>Extra vs current</th>
-    <th>Sprayer Cost $/acre</th><th>Value/Day</th>
-    <th>Days to Mixmate ROI</th><th>Mixmate Break Even Acres</th>
-  </tr></thead><tbody>`;
-  results.forEach(({ cfg, res }) => {
-    const rows = [
-      {
-        label: "20 min",
-        acDay: res.base.acDay,
-        extra: "–",
-        cap: res.capPerAcre_base,
-        val: "–",
-        days: "–",
-        opBe: "–",
-        tot: "–",
-      },
-      {
-        label: `${X.loadA} min`,
-        acDay: res.A.acDay,
-        extra: res.extraA,
-        cap: res.capPerAcre_A,
-        val: res.valDay_A,
-        days: res.daysA,
-        opBe: res.opBeAcresA,
-        tot: res.beAcresTotal_A,
-      },
-      {
-        label: `${X.loadB} min`,
-        acDay: res.B.acDay,
-        extra: res.extraB,
-        cap: res.capPerAcre_B,
-        val: res.valDay_B,
-        days: res.daysB,
-        opBe: res.opBeAcresB,
-        tot: res.beAcresTotal_B,
-      },
-    ];
-    rows.forEach((r) => {
-      roi += `<tr>
-        <td>${cfg.label} <span class="badge">boom ${cfg.boom}′ / tank ${
-        cfg.tank
-      } / price ${dollars(cfg.price)}</span></td>
-        <td>${r.label}</td>
-        <td>${fmt(r.acDay, 0)}</td>
-        <td>${
-          typeof r.opBe === "string" ? fmt(res.lifeBase, 0) : fmt(r.opBe, 0)
-        }</td>
-        <td>${typeof r.extra === "string" ? "–" : fmt(r.extra, 0)}</td>
-        <td>${dollars(r.cap, 2)}</td>
-        <td>${typeof r.val === "string" ? "–" : dollars(r.val, 0)}</td>
-        <td>${typeof r.days === "string" ? "–" : fmt(r.days, 0)}</td>
-        <td>${typeof r.tot === "string" ? "–" : fmt(r.tot, 0)}</td>
-      </tr>`;
-    });
-    roi += `<tr><td colspan="9" style="border-bottom:2px solid #d1d5db"></td></tr>`;
-  });
-  roi += "</tbody></table></div>";
-  document.getElementById("roiTable").innerHTML = roi;
-
-  // Lifetime extras table
+  // Lifetime
   let life = `<div style="overflow:auto"><table><thead><tr>
-    <th>Sprayer</th><th>Lifetime Acres</th><th>Extra with ${fmt(
-      X.loadA
-    )} min Mix</th><th>Extra with ${fmt(X.loadB)} min Mix</th>
-    <th>Sprayer Cost $/acre (${fmt(
-      X.loadA
-    )} min)</th><th>Sprayer Cost $/acre (${fmt(X.loadB)} min)</th>
+    <th>Sprayer</th><th>Mix Time</th>
+    <th>Potential Daily Acres</th><th>Potential Daily Revenue Gain</th>
+    <th>Potential Annual Acres</th><th>Potential Annual Revenue Gain</th>
+    <th>Potential Lifetime Acres</th><th>Potential Lifetime Revenue Gain</th>
   </tr></thead><tbody>`;
-  results.forEach(({ cfg, res }) => {
-    life += `<tr>
-      <td>${cfg.label} <span class="badge">boom ${cfg.boom}′ / tank ${
-      cfg.tank
-    } / price ${dollars(cfg.price)}</span></td>
-      <td>${fmt(res.lifeBase, 0)}</td>
-      <td>${fmt(res.machineExtA, 0)}</td>
-      <td>${fmt(res.machineExtB, 0)}</td>
-      <td>${dollars(res.capPerAcre_A, 2)}</td>
-      <td>${dollars(res.capPerAcre_B, 2)}</td>
-    </tr>`;
-    life += `<tr><td colspan="6" style="border-bottom:2px solid #d1d5db"></td></tr>`;
+    results.forEach(({ cfg, res }) => {
+    const rows = [
+      {
+        title: `current mix time`,
+        label: `${X.loadBase} min`,
+        lifeAcres: res.lifeBase,
+        lifeRevGain: "–",
+        annualAcres: res.annualAcres,
+        annualRevGain: "–",
+        dayAcres: res.base.acDay,
+        dayRevGain: "–",
+      },
+      {
+        title: `with Mixmate`,
+        label: `${X.loadMM} min`,
+        lifeAcres: res.totalMixmateAcresLife,
+        lifeRevGain: res.revenueGainedLife,
+        annualAcres: res.totalMixmateAcresYear,
+        annualRevGain: res.revenueGainedYear,
+        dayAcres: res.totalMixmateAcresDay,
+        dayRevGain: res.revenueGainedDay,
+      },
+    ];
+    rows.forEach((r) => {
+      life += `<tr>
+        <td>${cfg.label} <span class="badge">${r.title}</span></td>
+        <td>${r.label}</td>
+        <td>${fmt(r.dayAcres, 0)}</td>
+        <td>${typeof r.dayRevGain === "string" ? dollars(0, 2) : dollars(r.dayRevGain, 2)}</td>
+        <td>${fmt(r.annualAcres, 0)}</td>
+        <td>${typeof r.annualRevGain === "string" ? dollars(0, 2) : dollars(r.annualRevGain, 2)}</td>
+        <td>${fmt(r.lifeAcres, 0)}</td>
+        <td>${typeof r.lifeRevGain === "string" ? dollars(0, 2) : dollars(r.lifeRevGain, 2)}</td>
+      </tr>`;
+    });
+    life += `<tr><td colspan="9" style="border-bottom:2px solid #d1d5db"></td></tr>`;
   });
   life += "</tbody></table></div>";
   document.getElementById("lifeTable").innerHTML = life;
@@ -328,26 +257,19 @@ function attach() {
   const ids = [
     "sprayHours",
     "loadBase",
-    "loadA",
-    "loadB",
+    "loadMM",
     "speedMph",
     "fieldEff",
-    "boom1",
-    "tank1",
-    "price1",
-    "dep1",
-    "boom2",
-    "tank2",
-    "price2",
-    "dep2",
-    "boom3",
-    "tank3",
-    "price3",
-    "dep3",
     "gpa",
     "annualAcres",
     "yearsLife",
-    "mixmatePrice",
+    "boom1",
+    "tank1",
+    "dep1",
+    "boom2",
+    "tank2",
+    "dep2",
+    "revPerAcre",
   ];
   ids.forEach((id) =>
     document.getElementById(id).addEventListener("input", renderTables)
