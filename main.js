@@ -11,27 +11,6 @@ function dollars(n, d = 0) {
   return "$" + fmt(n, d);
 }
 
-function readInputs() {
-  const gi = (id) => parseFloat(document.getElementById(id).value);
-  return {
-    sprayHours: gi("sprayHours"),
-    loadBase: gi("loadBase"),
-    loadMM: gi("loadMM"),
-    speed: gi("speedMph"),
-    boom1: gi("boom1"),
-    tank1: gi("tank1"),
-    dep1: gi("dep1"),
-    boom2: gi("boom2"),
-    tank2: gi("tank2"),
-    dep2: gi("dep2"),
-    gpa: gi("gpa"),
-    fe: gi("fieldEff"),
-    annualAcres: gi("annualAcres"),
-    yearsLife: gi("yearsLife"),
-    revPerAcre: gi("revPerAcre"),
-  };
-}
-
 function efc(boom, mph, fe) {
   return (boom * mph * (fe/100.0)) / 8.25;
 } // ac/hr
@@ -58,21 +37,24 @@ function lifetimeExtra(lifeAcres, extraDay, baseDay) {
 
 function calcForConfig(cfg, X) {
   const {
-    sprayHours,
-    loadBase,
-    loadMM,
-    speed,
-    fe,
-    gpa,
-    annualAcres,
     yearsLife,
-    mixmatePrice,
+    annualAcres,
+    annualEngHrs,
+    speedMph,
+    gpa,
+    sprayHours,
+    currentMin,
+    mixmateMin,
+    ferryTime,
     revPerAcre,
+    chemCost,
+    measError,
   } = X;
-  const { boom, tank, price, dep } = cfg;
+  const { boom, tank, dep } = cfg;
   const lifeBase = annualAcres * yearsLife;
+  const currentAcHr = annualAcres / annualEngHrs;
 
-  const efcVal = efc(boom, speed, fe);
+  const efcVal = efc(boom, speedMph, fe);
   const apl = acresPerLoad(tank, gpa);
 
   function block(loadMin) {
@@ -153,14 +135,12 @@ function renderTables() {
       label: "Sprayer 1",
       boom: X.boom1,
       tank: X.tank1,
-      price: X.price1,
       dep: X.dep1,
     },
     {
       label: "Sprayer 2",
       boom: X.boom2,
       tank: X.tank2,
-      price: X.price2,
       dep: X.dep2,
     },
   ];
@@ -253,23 +233,50 @@ function renderTables() {
   document.getElementById("lifeTable").innerHTML = life;
 }
 
+function readInputs() {
+  const gi = (id) => parseFloat(document.getElementById(id).value);
+  return {
+    yearsLife: gi("yearsLife"),
+    annualAcres: gi("annualAcres"),
+    annualEngHrs: gi("annualEngHrs"),
+    speedMph: gi("speedMph"),
+    gpa: gi("gpa"),
+    sprayHours: gi("sprayHours"),
+    currentMin: gi("currentMin"),
+    mixmateMin: gi("mixmateMin"),
+    ferryTime: gi("ferryTime"),
+    revPerAcre: gi("revPerAcre"),
+    chemCost: gi("chemCost"),
+    measError: gi("measError"),
+    boom1: gi("boom1"),
+    tank1: gi("tank1"),
+    dep1: gi("dep1"),
+    boom2: gi("boom2"),
+    tank2: gi("tank2"),
+    dep2: gi("dep2"),
+  };
+}
+
 function attach() {
   const ids = [
-    "sprayHours",
-    "loadBase",
-    "loadMM",
-    "speedMph",
-    "fieldEff",
-    "gpa",
-    "annualAcres",
     "yearsLife",
+    "annualAcres",
+    "annualEngHrs",
+    "speedMph",
+    "gpa",
+    "sprayHours",
+    "currentMin",
+    "mixmateMin",
+    "ferryTime",
+    "revPerAcre",
+    "chemCost",
+    "measError",
     "boom1",
     "tank1",
     "dep1",
     "boom2",
     "tank2",
     "dep2",
-    "revPerAcre",
   ];
   ids.forEach((id) =>
     document.getElementById(id).addEventListener("input", renderTables)
