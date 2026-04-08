@@ -50,7 +50,7 @@
         <br />
         Mixmate's average margin of error is +/- 0.5%
         <br />
-        Manual measuring devices being 10% to 15% off is not uncommon, we used 10% in our calculations - 
+        Manual measuring devices being 10% to 15% off is not uncommon, we default to 5% in our calculations out of an abundance of caution.
         <br />
                 <a
           class="text-north-500"
@@ -83,25 +83,6 @@
               step="1000"
               value="40000"
             />
-          </div>
-          <div class="grid-box">
-            <label>Annual Engine Hours</label
-            ><input
-              id="annualEngHrs"
-              type="number"
-              min="50"
-              step="1"
-              value="550"
-            />
-          </div>
-          <div class="grid-box">
-            <label>Avg sprayer speed (mph)</label
-            ><input id="speedMph" type="number" min="1" step="0.5" value="14" />
-          </div>
-
-          <div class="grid-box">
-            <label>GPA (gal/acre)</label
-            ><input id="gpa" type="number" min="1" step="1" value="15" />
           </div>
           <div class="grid-box">
             <label>Spray hours/day</label
@@ -141,40 +122,34 @@
           </div>
           <div class="grid-box">
             <label>Measurement Error (%)</label
-            ><input id="measError" type="number" min="1" step="1" value="10"/>
+            ><input id="measError" type="number" min="1" step="1" value="5"/>
           </div>
-
-          <h4 class="grid-box grid-label">Sprayer 1</h4>
-          <div class="grid-box">
-            <label>Boom (ft)</label
-            ><input id="boom1" type="number" min="20" step="1" value="90" />
-          </div>
-          <div class="grid-box">
-            <label>Tank (gal)</label
-            ><input id="tank1" type="number" min="100" step="10" value="1000" />
-          </div>
-          <div class="grid-box">
-            <label>Depreciation Rate ($/Eng Hr)</label
-            ><input id="dep1" type="number" min="0" step="10" value="280" />
-          </div>
+          <div></div>
           <div></div>
           <div></div>
 
-          <h4 class="grid-box grid-label">Sprayer 2</h4>
+          <h4 class="grid-box grid-label">Sprayer Information</h4>
           <div class="grid-box">
             <label>Boom (ft)</label
-            ><input id="boom2" type="number" min="20" step="1" value="120" />
+            ><input id="boom1" type="number" min="20" step="1" value="120" />
           </div>
           <div class="grid-box">
             <label>Tank (gal)</label
-            ><input id="tank2" type="number" min="100" step="10" value="1200" />
+            ><input id="tank1" type="number" min="100" step="10" value="1200" />
+          </div>
+          <div class="grid-box">
+            <label>Avg sprayer speed (mph)</label
+            ><input id="speedMph" type="number" min="1" step="0.5" value="14" />
+          </div>
+
+          <div class="grid-box">
+            <label>GPA (gal/acre)</label
+            ><input id="gpa" type="number" min="1" step="1" value="15" />
           </div>
           <div class="grid-box">
             <label>Depreciation Rate ($/Eng Hr)</label
-            ><input id="dep2" type="number" min="0" step="10" value="400" />
+            ><input id="dep1" type="number" min="0" step="10" value="400" />
           </div>
-          <div></div>
-          <div></div>
         </div>
         <div
           class="col-span-6 flex flex-col lg:flex-row items-baseline px-2 py-4"
@@ -189,16 +164,10 @@
       </div>
 
       <div class="card">
-        <div
-          style="
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-          "
-        >
-          <h2>1) ROI, Same Sprayed Acres/Day - Sprayer Depreciation Savings with Decreased Mix Time</h2>
+        <div class="flex justify-between align-center">
+          <h2>1) ROI, Measurement Accuracy - Chemical Savings</h2>
         </div>
-        <div id="dmtTable"></div>
+        <div id="chemTable"></div>
       </div>
 
       <div class="card">
@@ -207,6 +176,15 @@
         </div>
         <div id="lifeTable"></div>
       </div>
+
+      <div class="card">
+        <div class="flex justify-between align-center">
+          <h2>3) ROI, Same Sprayed Acres/Day - Sprayer Depreciation Savings with Decreased Mix Time</h2>
+        </div>
+        <div id="dmtTable"></div>
+      </div>
+
+
       <div className="w-full text-white text-center text-xs">
         © 2024 Praxidyn. All Rights Reserved.
       </div>
