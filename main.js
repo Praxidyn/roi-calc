@@ -11,35 +11,15 @@ function dollars(n, d = 0) {
   return "$" + fmt(n, d);
 }
 
-function readInputs() {
-  const gi = (id) => parseFloat(document.getElementById(id).value);
-  return {
-    sprayHours: gi("sprayHours"),
-    loadBase: gi("loadBase"),
-    loadMM: gi("loadMM"),
-    speed: gi("speedMph"),
-    boom1: gi("boom1"),
-    tank1: gi("tank1"),
-    dep1: gi("dep1"),
-    boom2: gi("boom2"),
-    tank2: gi("tank2"),
-    dep2: gi("dep2"),
-    gpa: gi("gpa"),
-    fe: gi("fieldEff"),
-    annualAcres: gi("annualAcres"),
-    yearsLife: gi("yearsLife"),
-    revPerAcre: gi("revPerAcre"),
-  };
+function maxAcMin(boom, mph) {
+  return ((boom * mph) / 8.25) / 60;
 }
-
-function efc(boom, mph, fe) {
-  return (boom * mph * (fe/100.0)) / 8.25;
-} // ac/hr
 function acresPerLoad(tank, gpa) {
   return tank / gpa;
 }
-function cycleHours(acresPerLoad, efc, loadMin) {
-  return (acresPerLoad / efc) + (loadMin / 60);
+function cycleHours(acresPerLoad, ferryTime, maxAcMin, loadMin) {
+  const minSpraying = acresPerLoad / maxAcMin;
+  return (minSpraying + ferryTime + loadMin) / 60;
 }
 function loadsPerDay(sprayHours, cycleH) {
   return sprayHours / cycleH;
@@ -58,33 +38,33 @@ function lifetimeExtra(lifeAcres, extraDay, baseDay) {
 
 function calcForConfig(cfg, X) {
   const {
-    sprayHours,
-    loadBase,
-    loadMM,
-    speed,
-    fe,
-    gpa,
-    annualAcres,
     yearsLife,
-    mixmatePrice,
+    annualAcres,
+    speedMph,
+    gpa,
+    sprayHours,
+    currentMin,
+    mixmateMin,
+    ferryTime,
     revPerAcre,
+    chemCost,
+    measError,
   } = X;
-  const { boom, tank, price, dep } = cfg;
+  const { boom, tank, dep } = cfg;
   const lifeBase = annualAcres * yearsLife;
-
-  const efcVal = efc(boom, speed, fe);
+  const maxAcMinVal = maxAcMin(boom, speedMph);
   const apl = acresPerLoad(tank, gpa);
 
   function block(loadMin) {
-    const cyc = cycleHours(apl, efcVal, loadMin);
+    const cyc = cycleHours(apl, ferryTime, maxAcMinVal, loadMin);
     const loads = loadsPerDay(sprayHours, cyc);
     const acDay = acresPerDay(loads, apl);
     const effHr = effAcPerHr(acDay, sprayHours);
     return { loadMin, cyc, loads, acDay, effHr };
   }
   // Calculate base data
-  const base = block(loadBase);
-  const MM = block(loadMM);
+  const base = block(currentMin);
+  const MM = block(mixmateMin);
   
   // Extra Acres covered day, year, lifetime
   const extraAcresDay = MM.acDay - base.acDay;
@@ -111,14 +91,11 @@ function calcForConfig(cfg, X) {
   const revenueGainedYear = (extraAcresYear * revPerAcre);
   const revenueGainedLife = (extraAcresLife * revPerAcre);
 
-  // Mixmate ROI
-  const mixmateDepDaysRoi = mixmatePrice / saveDepDolDay;
-  const mixmateDepAcresRoi = mixmateDepDaysRoi * base.acDay;
-  const mixmateRevDaysRoi = mixmatePrice / revenueGainedDay;
-  const mixmateRevAcresRoi = mixmateRevDaysRoi * MM.acDay;
+  const chemSavingsDay = base.acDay * (((measError - 0.5) / 100) * chemCost);
+  const chemSavingsYear = annualAcres * (((measError - 0.5) / 100) * chemCost);
+  const chemSavingsLife = lifeBase * (((measError - 0.5) / 100) * chemCost);
 
   return {
-    efc: efcVal,
     apl,
     base,
     MM,
@@ -139,10 +116,9 @@ function calcForConfig(cfg, X) {
     revenueGainedDay,
     revenueGainedYear,
     revenueGainedLife,
-    mixmateDepDaysRoi,
-    mixmateDepAcresRoi,
-    mixmateRevAcresRoi,
-    mixmateRevDaysRoi,
+    chemSavingsDay,
+    chemSavingsYear,
+    chemSavingsLife,
   };
 }
 
@@ -150,21 +126,48 @@ function renderTables() {
   const X = readInputs();
   const configs = [
     {
-      label: "Sprayer 1",
+      label: "",
       boom: X.boom1,
       tank: X.tank1,
-      price: X.price1,
       dep: X.dep1,
-    },
-    {
-      label: "Sprayer 2",
-      boom: X.boom2,
-      tank: X.tank2,
-      price: X.price2,
-      dep: X.dep2,
     },
   ];
   const results = configs.map((c) => ({ cfg: c, res: calcForConfig(c, X) }));
+
+  // Chemical Savings
+  let chem = `<div style="overflow:auto"><table><thead><tr>
+    <th>Mixing Method</th>
+    <th>Potential Daily Chemical Savings</th>
+    <th>Potential Annual Chemical Savings</th>
+    <th>Potential Lifetime Chemical Savings</th>
+  </tr></thead><tbody>`;
+    results.forEach(({ cfg, res }) => {
+    const rows = [
+      {
+        title: `current mixing method`,
+        chemSavingsDay: "–",
+        chemSavingsYear: "–",
+        chemSavingsLife: "–",
+      },
+      {
+        title: `with Mixmate`,
+        chemSavingsDay: res.chemSavingsDay,
+        chemSavingsYear: res.chemSavingsYear,
+        chemSavingsLife: res.chemSavingsLife,
+      },
+    ];
+    rows.forEach((r) => {
+      chem += `<tr>
+        <td>${cfg.label} <span class="badge">${r.title}</span></td>
+        <td>${typeof r.chemSavingsDay === "string" ? dollars(0, 2) : dollars(r.chemSavingsDay, 2)}</td>
+        <td>${typeof r.chemSavingsYear === "string" ? dollars(0, 2) : dollars(r.chemSavingsYear, 2)}</td>
+        <td>${typeof r.chemSavingsLife === "string" ? dollars(0, 2) : dollars(r.chemSavingsLife, 2)}</td>
+      </tr>`;
+    });
+    chem += `<tr><td colspan="9" style="border-bottom:2px solid #d1d5db"></td></tr>`;
+  });
+  chem += "</tbody></table></div>";
+  document.getElementById("chemTable").innerHTML = chem;
 
   // Decreased Mix Time
   let dmt = `<div style="overflow:auto"><table><thead><tr>
@@ -177,7 +180,7 @@ function renderTables() {
     const rows = [
       {
         title: `with Mixmate`,
-        time: `${X.loadMM} min`,
+        time: `${X.mixmateMin} min`,
         acDay: res.base.acDay,
         savedHoursDay: res.savedHoursDay,
         savedDollarsDay: res.saveDepDolDay,
@@ -216,7 +219,7 @@ function renderTables() {
     const rows = [
       {
         title: `current mix time`,
-        label: `${X.loadBase} min`,
+        label: `${X.currentMin} min`,
         lifeAcres: res.lifeBase,
         lifeRevGain: "–",
         annualAcres: res.annualAcres,
@@ -226,7 +229,7 @@ function renderTables() {
       },
       {
         title: `with Mixmate`,
-        label: `${X.loadMM} min`,
+        label: `${X.mixmateMin} min`,
         lifeAcres: res.totalMixmateAcresLife,
         lifeRevGain: res.revenueGainedLife,
         annualAcres: res.totalMixmateAcresYear,
@@ -253,23 +256,42 @@ function renderTables() {
   document.getElementById("lifeTable").innerHTML = life;
 }
 
+function readInputs() {
+  const gi = (id) => parseFloat(document.getElementById(id).value);
+  return {
+    yearsLife: gi("yearsLife"),
+    annualAcres: gi("annualAcres"),
+    speedMph: gi("speedMph"),
+    gpa: gi("gpa"),
+    sprayHours: gi("sprayHours"),
+    currentMin: gi("currentMin"),
+    mixmateMin: gi("mixmateMin"),
+    ferryTime: gi("ferryTime"),
+    revPerAcre: gi("revPerAcre"),
+    chemCost: gi("chemCost"),
+    measError: gi("measError"),
+    boom1: gi("boom1"),
+    tank1: gi("tank1"),
+    dep1: gi("dep1"),
+  };
+}
+
 function attach() {
   const ids = [
-    "sprayHours",
-    "loadBase",
-    "loadMM",
-    "speedMph",
-    "fieldEff",
-    "gpa",
-    "annualAcres",
     "yearsLife",
+    "annualAcres",
+    "speedMph",
+    "gpa",
+    "sprayHours",
+    "currentMin",
+    "mixmateMin",
+    "ferryTime",
+    "revPerAcre",
+    "chemCost",
+    "measError",
     "boom1",
     "tank1",
     "dep1",
-    "boom2",
-    "tank2",
-    "dep2",
-    "revPerAcre",
   ];
   ids.forEach((id) =>
     document.getElementById(id).addEventListener("input", renderTables)

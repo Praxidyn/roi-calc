@@ -35,6 +35,8 @@
         >.<br />
         Acres/Hour = (boom × speed × field efficiency*) ÷ 8.25
         <br />
+        * Field Efficiency is calculated using the inputs in the table below
+        <br />
         <a
           class="text-north-500"
           href="https://www.extension.iastate.edu/agdm/crops/html/a3-24.html"
@@ -46,7 +48,20 @@
         </button>
         </a>
         <br />
-        * Field Efficiency is a combination of the entered field efficency corrected with load time.
+        Mixmate's average margin of error is +/- 0.5%
+        <br />
+        According to the study below, manual measuring devices typically have a margin of error in the range of 10% to 15%. To be conservative, we default to 5% in our calculations.
+        <br />
+                <a
+          class="text-north-500"
+          href="https://www.no-tillfarmer.com/articles/2485-accurately-measuring-pesticides-requires-correct-calibrations#:~:text=The%20graduations%20(markings)%20on%20some,%E2%80%A2"
+          target="_blank"
+          ><button
+          class="w-100 h-10 rounded-sm bg-north-500 text-white"
+        >
+          No-Till Farmer
+        </button>
+        </a>
         <br />
       </div>
 
@@ -55,6 +70,20 @@
           class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg-grid-cols-5 xl:grid-cols-6 gap-3 grid-flow-row"
           id="inputs"
         >
+          <div class="grid-box">
+            <label>Years of life</label
+            ><input id="yearsLife" type="number" min="1" step="1" value="7" />
+          </div>
+          <div class="grid-box">
+            <label>Annual Sprayed Acres</label
+            ><input
+              id="annualAcres"
+              type="number"
+              min="1000"
+              step="1000"
+              value="40000"
+            />
+          </div>
           <div class="grid-box">
             <label>Spray hours/day</label
             ><input
@@ -67,26 +96,50 @@
           </div>
           <div class="grid-box">
             <label>Current mix time (min)</label
-            ><input id="loadBase" type="number" min="1" step="1" value="30" />
+            ><input id="currentMin" type="number" min="1" step="1" value="30" />
           </div>
           <div class="grid-box">
             <label>Mixmate Avg mix time (min)</label
-            ><input id="loadMM" type="number" min="1" step="1" value="7" readonly/>
+            ><input id="mixmateMin" type="number" min="1" step="1" value="7" readonly/>
+          </div>
+          <div class="grid-box">
+            <label>Ferry time (min)</label
+            ><input id="ferryTime" type="number" min="1" step="1" value="7" />
+          </div>
+          <div class="grid-box">
+            <label>Revenue ($/acre)</label
+            ><input id="revPerAcre" type="number" min="0" step="0.01" value="5"/>
+          </div>
+          <div class="grid-box">
+            <label>Chemical Cost ($/acre/year)</label
+            ><input
+              id="chemCost"
+              type="number"
+              min="0"
+              step="0.5"
+              value="75"
+            />
+          </div>
+          <div class="grid-box">
+            <label>Measurement Error (%)</label
+            ><input id="measError" type="number" min="1" step="1" value="5"/>
+          </div>
+          <div></div>
+          <div></div>
+          <div></div>
+
+          <h4 class="grid-box grid-label">Sprayer Information</h4>
+          <div class="grid-box">
+            <label>Boom (ft)</label
+            ><input id="boom1" type="number" min="20" step="1" value="120" />
+          </div>
+          <div class="grid-box">
+            <label>Tank (gal)</label
+            ><input id="tank1" type="number" min="100" step="10" value="1200" />
           </div>
           <div class="grid-box">
             <label>Avg sprayer speed (mph)</label
             ><input id="speedMph" type="number" min="1" step="0.5" value="14" />
-          </div>
-          <div class="grid-box">
-            <label>Field efficiency (%)</label
-            ><input
-              id="fieldEff"
-              type="number"
-              min="10"
-              max="100"
-              step="1"
-              value="82"
-            />
           </div>
 
           <div class="grid-box">
@@ -94,58 +147,9 @@
             ><input id="gpa" type="number" min="1" step="1" value="15" />
           </div>
           <div class="grid-box">
-            <label>Annual acres</label
-            ><input
-              id="annualAcres"
-              type="number"
-              min="1000"
-              step="1000"
-              value="40000"
-            />
-          </div>
-          <div class="grid-box">
-            <label>Years of life</label
-            ><input id="yearsLife" type="number" min="1" step="1" value="7" />
-          </div>
-          <div class="grid-box">
-            <label>Revenue ($/acre)</label
-            ><input id="revPerAcre" type="number" min="0" step="0.01" value="5" />
-          </div>
-          <div></div>
-          <div></div>
-          <div></div>
-
-          <h4 class="grid-box grid-label">Sprayer 1</h4>
-          <div class="grid-box">
-            <label>Boom (ft)</label
-            ><input id="boom1" type="number" min="20" step="1" value="90" />
-          </div>
-          <div class="grid-box">
-            <label>Tank (gal)</label
-            ><input id="tank1" type="number" min="100" step="10" value="1000" />
-          </div>
-          <div class="grid-box">
             <label>Depreciation Rate ($/Eng Hr)</label
-            ><input id="dep1" type="number" min="0" step="10" value="280" />
+            ><input id="dep1" type="number" min="0" step="10" value="400" />
           </div>
-          <div></div>
-          <div></div>
-
-          <h4 class="grid-box grid-label">Sprayer 2</h4>
-          <div class="grid-box">
-            <label>Boom (ft)</label
-            ><input id="boom2" type="number" min="20" step="1" value="120" />
-          </div>
-          <div class="grid-box">
-            <label>Tank (gal)</label
-            ><input id="tank2" type="number" min="100" step="10" value="1200" />
-          </div>
-          <div class="grid-box">
-            <label>Depreciation Rate ($/Eng Hr)</label
-            ><input id="dep2" type="number" min="0" step="10" value="400" />
-          </div>
-          <div></div>
-          <div></div>
         </div>
         <div
           class="col-span-6 flex flex-col lg:flex-row items-baseline px-2 py-4"
@@ -160,16 +164,10 @@
       </div>
 
       <div class="card">
-        <div
-          style="
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-          "
-        >
-          <h2>1) ROI, Same Sprayed Acres/Day - Sprayer Depreciation Savings with Decreased Mix Time</h2>
+        <div class="flex justify-between align-center">
+          <h2>1) ROI, Measurement Accuracy - Chemical Savings</h2>
         </div>
-        <div id="dmtTable"></div>
+        <div id="chemTable"></div>
       </div>
 
       <div class="card">
@@ -178,6 +176,15 @@
         </div>
         <div id="lifeTable"></div>
       </div>
+
+      <div class="card">
+        <div class="flex justify-between align-center">
+          <h2>3) ROI, Same Sprayed Acres/Day - Sprayer Depreciation Savings with Decreased Mix Time</h2>
+        </div>
+        <div id="dmtTable"></div>
+      </div>
+
+
       <div className="w-full text-white text-center text-xs">
         © 2024 Praxidyn. All Rights Reserved.
       </div>
