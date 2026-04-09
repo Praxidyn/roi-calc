@@ -19,7 +19,7 @@ function dollars(n, d = 0) {
   } else {
     return "$" + fmt(n, d);
   }
-  
+
 }
 
 function maxAcMin(boom, mph) {
@@ -310,37 +310,37 @@ function renderTables() {
 
   // Lifetime
   if (X.isMetric) {
-  let life = `<div style="overflow:auto"><table><thead><tr>
+    let life = `<div style="overflow:auto"><table><thead><tr>
     <th>Sprayer</th><th>Mix Time</th>
     <th>Potential Daily Hectares</th><th>Potential Daily Revenue Gain</th>
     <th>Potential Annual Hectares</th><th>Potential Annual Revenue Gain</th>
     <th>Potential Lifetime Hectares</th><th>Potential Lifetime Revenue Gain</th>
   </tr></thead><tbody>`;
-  results.forEach(({ cfg, res }) => {
-    const rows = [
-      {
-        title: `current mix time`,
-        label: `${X.currentMin} min`,
-        lifeAcres: res.lifeBase,
-        lifeRevGain: "–",
-        annualAcres: res.annualAcres,
-        annualRevGain: "–",
-        dayAcres: res.base.acDay,
-        dayRevGain: "–",
-      },
-      {
-        title: `with Mixmate`,
-        label: `${X.mixmateMin} min`,
-        lifeAcres: res.totalMixmateAcresLife,
-        lifeRevGain: res.revenueGainedLife,
-        annualAcres: res.totalMixmateAcresYear,
-        annualRevGain: res.revenueGainedYear,
-        dayAcres: res.totalMixmateAcresDay,
-        dayRevGain: res.revenueGainedDay,
-      },
-    ];
-    rows.forEach((r) => {
-      life += `<tr>
+    results.forEach(({ cfg, res }) => {
+      const rows = [
+        {
+          title: `current mix time`,
+          label: `${X.currentMin} min`,
+          lifeAcres: res.lifeBase,
+          lifeRevGain: "–",
+          annualAcres: res.annualAcres,
+          annualRevGain: "–",
+          dayAcres: res.base.acDay,
+          dayRevGain: "–",
+        },
+        {
+          title: `with Mixmate`,
+          label: `${X.mixmateMin} min`,
+          lifeAcres: res.totalMixmateAcresLife,
+          lifeRevGain: res.revenueGainedLife,
+          annualAcres: res.totalMixmateAcresYear,
+          annualRevGain: res.revenueGainedYear,
+          dayAcres: res.totalMixmateAcresDay,
+          dayRevGain: res.revenueGainedDay,
+        },
+      ];
+      rows.forEach((r) => {
+        life += `<tr>
         <td>${cfg.label} <span class="badge">${r.title}</span></td>
         <td>${r.label}</td>
         <td>${fmt(r.dayAcres * acToHa, 0)}</td>
@@ -350,43 +350,43 @@ function renderTables() {
         <td>${fmt(r.lifeAcres * acToHa, 0)}</td>
         <td>${typeof r.lifeRevGain === "string" ? dollars(0, 2) : dollars(r.lifeRevGain, 2)}</td>
       </tr>`;
+      });
+      life += `<tr><td colspan="9" style="border-bottom:2px solid #d1d5db"></td></tr>`;
     });
-    life += `<tr><td colspan="9" style="border-bottom:2px solid #d1d5db"></td></tr>`;
-  });
-  life += "</tbody></table></div>";
-  document.getElementById("lifeTable").innerHTML = life;
+    life += "</tbody></table></div>";
+    document.getElementById("lifeTable").innerHTML = life;
   } else {
-      let life = `<div style="overflow:auto"><table><thead><tr>
+    let life = `<div style="overflow:auto"><table><thead><tr>
     <th>Sprayer</th><th>Mix Time</th>
     <th>Potential Daily Acres</th><th>Potential Daily Revenue Gain</th>
     <th>Potential Annual Acres</th><th>Potential Annual Revenue Gain</th>
     <th>Potential Lifetime Acres</th><th>Potential Lifetime Revenue Gain</th>
   </tr></thead><tbody>`;
-  results.forEach(({ cfg, res }) => {
-    const rows = [
-      {
-        title: `current mix time`,
-        label: `${X.currentMin} min`,
-        lifeAcres: res.lifeBase,
-        lifeRevGain: "–",
-        annualAcres: res.annualAcres,
-        annualRevGain: "–",
-        dayAcres: res.base.acDay,
-        dayRevGain: "–",
-      },
-      {
-        title: `with Mixmate`,
-        label: `${X.mixmateMin} min`,
-        lifeAcres: res.totalMixmateAcresLife,
-        lifeRevGain: res.revenueGainedLife,
-        annualAcres: res.totalMixmateAcresYear,
-        annualRevGain: res.revenueGainedYear,
-        dayAcres: res.totalMixmateAcresDay,
-        dayRevGain: res.revenueGainedDay,
-      },
-    ];
-    rows.forEach((r) => {
-      life += `<tr>
+    results.forEach(({ cfg, res }) => {
+      const rows = [
+        {
+          title: `current mix time`,
+          label: `${X.currentMin} min`,
+          lifeAcres: res.lifeBase,
+          lifeRevGain: "–",
+          annualAcres: res.annualAcres,
+          annualRevGain: "–",
+          dayAcres: res.base.acDay,
+          dayRevGain: "–",
+        },
+        {
+          title: `with Mixmate`,
+          label: `${X.mixmateMin} min`,
+          lifeAcres: res.totalMixmateAcresLife,
+          lifeRevGain: res.revenueGainedLife,
+          annualAcres: res.totalMixmateAcresYear,
+          annualRevGain: res.revenueGainedYear,
+          dayAcres: res.totalMixmateAcresDay,
+          dayRevGain: res.revenueGainedDay,
+        },
+      ];
+      rows.forEach((r) => {
+        life += `<tr>
         <td>${cfg.label} <span class="badge">${r.title}</span></td>
         <td>${r.label}</td>
         <td>${fmt(r.dayAcres, 0)}</td>
@@ -396,11 +396,11 @@ function renderTables() {
         <td>${fmt(r.lifeAcres, 0)}</td>
         <td>${typeof r.lifeRevGain === "string" ? dollars(0, 2) : dollars(r.lifeRevGain, 2)}</td>
       </tr>`;
+      });
+      life += `<tr><td colspan="9" style="border-bottom:2px solid #d1d5db"></td></tr>`;
     });
-    life += `<tr><td colspan="9" style="border-bottom:2px solid #d1d5db"></td></tr>`;
-  });
-  life += "</tbody></table></div>";
-  document.getElementById("lifeTable").innerHTML = life;
+    life += "</tbody></table></div>";
+    document.getElementById("lifeTable").innerHTML = life;
   }
 }
 
@@ -447,10 +447,18 @@ function attach() {
     document.getElementById(id).addEventListener("input", renderTables)
   );
   document.getElementById("reset").addEventListener("click", () => {
-    document
-      .querySelectorAll("#inputs input")
-      .forEach((inp) => (inp.value = inp.defaultValue));
-    renderTables();
+    if (document.getElementById("toggleMetric").checked) {
+      document
+        .querySelectorAll("#inputs input")
+        .forEach((inp) => (inp.value = inp.defaultValue));
+        convertUnits();
+    } else {
+      document
+        .querySelectorAll("#inputs input")
+        .forEach((inp) => (inp.value = inp.defaultValue));
+      renderTables();
+    }
+
   });
   document.getElementById("toggleMetric").addEventListener("change", convertUnits);
   renderTables();
