@@ -17,7 +17,7 @@
         <div class="flex flex-row items-center text-white font-semibold italic">
           by
           <div class="w-48 mx-3 mb-2">
-            <img src="/public/mixmate.png" />
+            <img src="/mixmate.png" />
           </div>
         </div>
       </div>
@@ -47,7 +47,6 @@
           Iowa State University Extension A3-24
         </button>
         </a>
-        <br />
         
         <br />
         According to the study below, manual measuring devices typically have a margin of error in the range of 10% to 15%. To be conservative, we default to 5% in our calculations versus Mixmate's average margin of error at 0.5%
@@ -70,12 +69,22 @@
           class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg-grid-cols-5 xl:grid-cols-6 gap-3 grid-flow-row"
           id="inputs"
         >
+        <div
+          class="col-span-6 flex flex-col lg:flex-row items-baseline px-2 py-4 items-center"
+        >
+          Standard 
+          <label class="switch">
+            <input type="checkbox" id="toggleMetric"/>
+            <span class="slider"></span>
+          </label>
+          Metric
+        </div>
           <div class="grid-box">
             <label>Years of life</label
             ><input id="yearsLife" type="number" min="1" step="1" value="7" />
           </div>
           <div class="grid-box">
-            <label>Annual Sprayed Acres</label
+            <label id="annualAreaLabel">Annual Sprayed Acres</label
             ><input
               id="annualAcres"
               type="number"
@@ -107,11 +116,11 @@
             ><input id="ferryTime" type="number" min="1" step="1" value="7" />
           </div>
           <div class="grid-box">
-            <label>Revenue ($/acre)</label
+            <label id="revPerAreaLabel">Revenue ($/acre)</label
             ><input id="revPerAcre" type="number" min="0" step="0.01" value="5"/>
           </div>
           <div class="grid-box">
-            <label>Chemical Cost ($/acre/year)</label
+            <label id="chemCostLabel">Chemical Cost ($/acre/year)</label
             ><input
               id="chemCost"
               type="number"
@@ -130,24 +139,24 @@
 
           <h4 class="grid-box grid-label">Sprayer Information</h4>
           <div class="grid-box">
-            <label>Boom (ft)</label
+            <label id="boomLabel">Boom (ft)</label
             ><input id="boom1" type="number" min="20" step="1" value="120" />
           </div>
           <div class="grid-box">
-            <label>Tank (gal)</label
+            <label id="tankLabel">Tank (gal)</label
             ><input id="tank1" type="number" min="100" step="10" value="1200" />
           </div>
           <div class="grid-box">
-            <label>Avg sprayer speed (mph)</label
+            <label id="speedLabel">Avg sprayer speed (mph)</label
             ><input id="speedMph" type="number" min="1" step="0.5" value="14" />
           </div>
 
           <div class="grid-box">
-            <label>GPA (gal/acre)</label
+            <label id="appRateLabel">Application Rate (gal/acre)</label
             ><input id="gpa" type="number" min="1" step="1" value="15" />
           </div>
           <div class="grid-box">
-            <label>Depreciation Rate ($/Eng Hr)</label
+            <label id="depLabel">Depreciation Rate ($/Eng Hr)</label
             ><input id="dep1" type="number" min="0" step="10" value="400" />
           </div>
         </div>

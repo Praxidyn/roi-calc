@@ -1,3 +1,9 @@
+const acToHa = 0.404686;
+const mphToKph = 1.60934;
+const gpaToLph = 9.354;
+const galToL = 3.78541;
+const ftToM = 0.3048;
+
 function fmt(n, d = 0) {
   if (isNaN(n) || !isFinite(n)) return "–";
   const o = Number(n);
@@ -8,7 +14,12 @@ function fmt(n, d = 0) {
 }
 function dollars(n, d = 0) {
   if (isNaN(n) || !isFinite(n)) return "–";
-  return "$" + fmt(n, d);
+  if (document.getElementById("toggleMetric").checked) {
+    return fmt(n, d) + " Cur";
+  } else {
+    return "$" + fmt(n, d);
+  }
+  
 }
 
 function maxAcMin(boom, mph) {
@@ -65,7 +76,7 @@ function calcForConfig(cfg, X) {
   // Calculate base data
   const base = block(currentMin);
   const MM = block(mixmateMin);
-  
+
   // Extra Acres covered day, year, lifetime
   const extraAcresDay = MM.acDay - base.acDay;
   const extraAcresLife = lifetimeExtra(lifeBase, extraAcresDay, base.acDay);
@@ -122,8 +133,57 @@ function calcForConfig(cfg, X) {
   };
 }
 
+function convertUnits() {
+  if (document.getElementById("toggleMetric").checked) {
+    document.getElementById("annualAreaLabel").innerText = "Annual Sprayed Hectares";
+    document.getElementById("revPerAreaLabel").innerText = "Revenue (Cur/ha)";
+    document.getElementById("chemCostLabel").innerText = "Chemical Cost (Cur/ha/year)";
+    document.getElementById("boomLabel").innerText = "Boom (m)";
+    document.getElementById("tankLabel").innerText = "Tank (l)";
+    document.getElementById("speedLabel").innerText = "Speed (kph)";
+    document.getElementById("appRateLabel").innerText = "Application Rate (l/ha)";
+    document.getElementById("depLabel").innerText = "Depreciation (Cur/Eng Hr)";
+    // Convert input values to metric
+    // document.getElementById("annualAcres").value = (parseFloat(document.getElementById("annualAcres").value) * acToHa).toFixed(0);
+    document.getElementById("revPerAcre").value = (parseFloat(document.getElementById("revPerAcre").value) * 5).toFixed(0);
+    document.getElementById("chemCost").value = (parseFloat(document.getElementById("chemCost").value) * 5).toFixed(0);
+    document.getElementById("boom1").value = (parseFloat(document.getElementById("boom1").value) * ftToM).toFixed(0);
+    document.getElementById("tank1").value = (parseFloat(document.getElementById("tank1").value) * galToL).toFixed(0);
+    document.getElementById("speedMph").value = (parseFloat(document.getElementById("speedMph").value) * mphToKph).toFixed(0);
+    document.getElementById("gpa").value = (parseFloat(document.getElementById("gpa").value) * gpaToLph).toFixed(0);
+    document.getElementById("dep1").value = (parseFloat(document.getElementById("dep1").value) * 5).toFixed(0);
+  } else {
+    document.getElementById("annualAreaLabel").innerText = "Annual Sprayed Acres";
+    document.getElementById("revPerAreaLabel").innerText = "Revenue ($/acre)";
+    document.getElementById("chemCostLabel").innerText = "Chemical Cost ($/acre/year)";
+    document.getElementById("boomLabel").innerText = "Boom (ft)";
+    document.getElementById("tankLabel").innerText = "Tank (gal)";
+    document.getElementById("speedLabel").innerText = "Speed (mph)";
+    document.getElementById("appRateLabel").innerText = "Application Rate (gal/acre)";
+    document.getElementById("depLabel").innerText = "Depreciation ($/Eng Hr)";
+    // Convert input values to imperial
+    // document.getElementById("annualAcres").value = (parseFloat(document.getElementById("annualAcres").value) / acToHa).toFixed(0);
+    document.getElementById("revPerAcre").value = (parseFloat(document.getElementById("revPerAcre").value) / 5).toFixed(0);
+    document.getElementById("chemCost").value = (parseFloat(document.getElementById("chemCost").value) / 5).toFixed(0);
+    document.getElementById("boom1").value = (parseFloat(document.getElementById("boom1").value) / ftToM).toFixed(0);
+    document.getElementById("tank1").value = (parseFloat(document.getElementById("tank1").value) / galToL).toFixed(0);
+    document.getElementById("speedMph").value = (parseFloat(document.getElementById("speedMph").value) / mphToKph).toFixed(0);
+    document.getElementById("gpa").value = (parseFloat(document.getElementById("gpa").value) / gpaToLph).toFixed(0);
+    document.getElementById("dep1").value = (parseFloat(document.getElementById("dep1").value) / 5).toFixed(0);
+  }
+  renderTables();
+}
+
 function renderTables() {
   const X = readInputs();
+  if (X.isMetric) {
+    X.annualAcres = X.annualAcres / acToHa;
+    X.boom1 = X.boom1 / ftToM;
+    X.tank1 = X.tank1 / galToL;
+    X.speedMph = X.speedMph / mphToKph;
+    X.gpa = X.gpa / gpaToLph;
+  }
+
   const configs = [
     {
       label: "",
@@ -141,7 +201,7 @@ function renderTables() {
     <th>Potential Annual Chemical Savings</th>
     <th>Potential Lifetime Chemical Savings</th>
   </tr></thead><tbody>`;
-    results.forEach(({ cfg, res }) => {
+  results.forEach(({ cfg, res }) => {
     const rows = [
       {
         title: `current mixing method`,
@@ -170,28 +230,67 @@ function renderTables() {
   document.getElementById("chemTable").innerHTML = chem;
 
   // Decreased Mix Time
-  let dmt = `<div style="overflow:auto"><table><thead><tr>
+  if (X.isMetric) {
+    let dmt = `<div style="overflow:auto"><table><thead><tr>
+    <th>Sprayer</th><th>Mix Time</th><th>Hectars/Day</th>
+    <th>Hours Saved/Day</th><th>Cur Saved/Day</th>
+    <th>Hours Saved/Year</th><th>Cur Saved/Year</th>
+    <th>Hours Saved/Lifetime</th><th>Cur Saved/Lifetime</th>
+  </tr></thead><tbody>`;
+    results.forEach(({ cfg, res }) => {
+      const rows = [
+        {
+          title: `with Mixmate`,
+          time: `${X.mixmateMin} min`,
+          acDay: res.base.acDay,
+          savedHoursDay: res.savedHoursDay,
+          savedDollarsDay: res.saveDepDolDay,
+          savedHoursYear: res.savedHoursYear,
+          savedDollarsYear: res.saveDepDolYear,
+          savedHoursLife: res.savedHoursLife,
+          savedDollarsLife: res.saveDepDolLife,
+        },
+      ];
+      rows.forEach((r) => {
+        dmt += `<tr>
+        <td>${cfg.label} <span class="badge">${r.title}</span></td>
+        <td>${r.time}</td>
+        <td>${fmt(r.acDay * acToHa, 0)}</td>
+        <td>${typeof r.savedHoursDay === "string" ? "–" : fmt(r.savedHoursDay, 2)}</td>
+        <td>${typeof r.savedDollarsDay === "string" ? "–" : dollars(r.savedDollarsDay, 2)}</td>
+        <td>${typeof r.savedHoursYear === "string" ? "–" : fmt(r.savedHoursYear, 2)}</td>
+        <td>${typeof r.savedDollarsYear === "string" ? "–" : dollars(r.savedDollarsYear, 2)}</td>
+        <td>${typeof r.savedHoursLife === "string" ? "–" : fmt(r.savedHoursLife, 2)}</td>
+        <td>${typeof r.savedDollarsLife === "string" ? "–" : dollars(r.savedDollarsLife, 2)}</td>
+      </tr>`;
+      });
+      dmt += `<tr><td colspan="9" style="border-bottom:2px solid #d1d5db"></td></tr>`;
+    });
+    dmt += "</tbody></table></div>";
+    document.getElementById("dmtTable").innerHTML = dmt;
+  } else {
+    let dmt = `<div style="overflow:auto"><table><thead><tr>
     <th>Sprayer</th><th>Mix Time</th><th>Acres/Day</th>
     <th>Hours Saved/Day</th><th>$ Saved/Day</th>
     <th>Hours Saved/Year</th><th>$ Saved/Year</th>
     <th>Hours Saved/Lifetime</th><th>$ Saved/Lifetime</th>
   </tr></thead><tbody>`;
-  results.forEach(({ cfg, res }) => {
-    const rows = [
-      {
-        title: `with Mixmate`,
-        time: `${X.mixmateMin} min`,
-        acDay: res.base.acDay,
-        savedHoursDay: res.savedHoursDay,
-        savedDollarsDay: res.saveDepDolDay,
-        savedHoursYear: res.savedHoursYear,
-        savedDollarsYear: res.saveDepDolYear,
-        savedHoursLife: res.savedHoursLife,
-        savedDollarsLife: res.saveDepDolLife,
-      },
-    ];
-    rows.forEach((r) => {
-      dmt += `<tr>
+    results.forEach(({ cfg, res }) => {
+      const rows = [
+        {
+          title: `with Mixmate`,
+          time: `${X.mixmateMin} min`,
+          acDay: res.base.acDay,
+          savedHoursDay: res.savedHoursDay,
+          savedDollarsDay: res.saveDepDolDay,
+          savedHoursYear: res.savedHoursYear,
+          savedDollarsYear: res.saveDepDolYear,
+          savedHoursLife: res.savedHoursLife,
+          savedDollarsLife: res.saveDepDolLife,
+        },
+      ];
+      rows.forEach((r) => {
+        dmt += `<tr>
         <td>${cfg.label} <span class="badge">${r.title}</span></td>
         <td>${r.time}</td>
         <td>${fmt(r.acDay, 0)}</td>
@@ -202,20 +301,68 @@ function renderTables() {
         <td>${typeof r.savedHoursLife === "string" ? "–" : fmt(r.savedHoursLife, 2)}</td>
         <td>${typeof r.savedDollarsLife === "string" ? "–" : dollars(r.savedDollarsLife, 2)}</td>
       </tr>`;
+      });
+      dmt += `<tr><td colspan="9" style="border-bottom:2px solid #d1d5db"></td></tr>`;
     });
-    dmt += `<tr><td colspan="9" style="border-bottom:2px solid #d1d5db"></td></tr>`;
-  });
-  dmt += "</tbody></table></div>";
-  document.getElementById("dmtTable").innerHTML = dmt;
+    dmt += "</tbody></table></div>";
+    document.getElementById("dmtTable").innerHTML = dmt;
+  }
 
   // Lifetime
+  if (X.isMetric) {
   let life = `<div style="overflow:auto"><table><thead><tr>
+    <th>Sprayer</th><th>Mix Time</th>
+    <th>Potential Daily Hectares</th><th>Potential Daily Revenue Gain</th>
+    <th>Potential Annual Hectares</th><th>Potential Annual Revenue Gain</th>
+    <th>Potential Lifetime Hectares</th><th>Potential Lifetime Revenue Gain</th>
+  </tr></thead><tbody>`;
+  results.forEach(({ cfg, res }) => {
+    const rows = [
+      {
+        title: `current mix time`,
+        label: `${X.currentMin} min`,
+        lifeAcres: res.lifeBase,
+        lifeRevGain: "–",
+        annualAcres: res.annualAcres,
+        annualRevGain: "–",
+        dayAcres: res.base.acDay,
+        dayRevGain: "–",
+      },
+      {
+        title: `with Mixmate`,
+        label: `${X.mixmateMin} min`,
+        lifeAcres: res.totalMixmateAcresLife,
+        lifeRevGain: res.revenueGainedLife,
+        annualAcres: res.totalMixmateAcresYear,
+        annualRevGain: res.revenueGainedYear,
+        dayAcres: res.totalMixmateAcresDay,
+        dayRevGain: res.revenueGainedDay,
+      },
+    ];
+    rows.forEach((r) => {
+      life += `<tr>
+        <td>${cfg.label} <span class="badge">${r.title}</span></td>
+        <td>${r.label}</td>
+        <td>${fmt(r.dayAcres * acToHa, 0)}</td>
+        <td>${typeof r.dayRevGain === "string" ? dollars(0, 2) : dollars(r.dayRevGain, 2)}</td>
+        <td>${fmt(r.annualAcres * acToHa, 0)}</td>
+        <td>${typeof r.annualRevGain === "string" ? dollars(0, 2) : dollars(r.annualRevGain, 2)}</td>
+        <td>${fmt(r.lifeAcres * acToHa, 0)}</td>
+        <td>${typeof r.lifeRevGain === "string" ? dollars(0, 2) : dollars(r.lifeRevGain, 2)}</td>
+      </tr>`;
+    });
+    life += `<tr><td colspan="9" style="border-bottom:2px solid #d1d5db"></td></tr>`;
+  });
+  life += "</tbody></table></div>";
+  document.getElementById("lifeTable").innerHTML = life;
+  } else {
+      let life = `<div style="overflow:auto"><table><thead><tr>
     <th>Sprayer</th><th>Mix Time</th>
     <th>Potential Daily Acres</th><th>Potential Daily Revenue Gain</th>
     <th>Potential Annual Acres</th><th>Potential Annual Revenue Gain</th>
     <th>Potential Lifetime Acres</th><th>Potential Lifetime Revenue Gain</th>
   </tr></thead><tbody>`;
-    results.forEach(({ cfg, res }) => {
+  results.forEach(({ cfg, res }) => {
     const rows = [
       {
         title: `current mix time`,
@@ -254,11 +401,13 @@ function renderTables() {
   });
   life += "</tbody></table></div>";
   document.getElementById("lifeTable").innerHTML = life;
+  }
 }
 
 function readInputs() {
   const gi = (id) => parseFloat(document.getElementById(id).value);
   return {
+    isMetric: document.getElementById("toggleMetric").checked,
     yearsLife: gi("yearsLife"),
     annualAcres: gi("annualAcres"),
     speedMph: gi("speedMph"),
@@ -278,6 +427,7 @@ function readInputs() {
 
 function attach() {
   const ids = [
+    "toggleMetric",
     "yearsLife",
     "annualAcres",
     "speedMph",
@@ -302,6 +452,7 @@ function attach() {
       .forEach((inp) => (inp.value = inp.defaultValue));
     renderTables();
   });
+  document.getElementById("toggleMetric").addEventListener("change", convertUnits);
   renderTables();
 }
 
